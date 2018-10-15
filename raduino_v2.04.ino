@@ -74,6 +74,10 @@
 // digital BFO
 #define BFOFREQ (11998800UL)      // initial (uncalibrated) BFO frequency (Hz)
 
+// debug to serial
+#define DEBUG_SERIAL true         // if true we will send some informations about vfo, bfo and others to serial (Serial.print...).
+//bool debug_sent = false           // check if message already send.
+
 // all variables that will be stored in EEPROM are contained in this 'struct':
 struct userparameters {
   byte raduino_version;                            // version identifier
@@ -718,7 +722,7 @@ void calibrate() {
         bfo_freq = u.bfo_freq + u.bfo_offset_usb;
         break;
       case 6: // calibrate BFO for CWU
-        bfo_freq = u.bfo_freq + u.bfo_offset_cwu;      
+        bfo_freq = u.bfo_freq + u.bfo_offset_cwu;
         if (u.cap_sens != 0)
           touch_key();
         if (digitalRead(PTT_SENSE) && (!digitalRead(KEY) || (u.cap_sens != 0 && capaKEY))) {
@@ -741,6 +745,9 @@ void calibrate() {
       printLine(1, c);
     }
   }
+
+  if (DEBUG_SERIAL)
+    DebugToSerial();
 }
 
 /**
@@ -1759,6 +1766,9 @@ void set_CWparams() {
 */
 
 void scan_params() {
+  if (DEBUG_SERIAL)
+    DebugToSerial();
+
 
   int knob = analogRead(ANALOG_TUNING); // get the current tuning knob position
   if (firstrun) {
@@ -1999,6 +2009,10 @@ void shiftBase() {
 */
 
 void doTuning() {
+  
+  if (DEBUG_SERIAL)
+    DebugToSerial();
+
   int knob = analogRead(ANALOG_TUNING) * 100000 / 10230; // get the current tuning knob position
 
   // tuning is disabled during TX (only when PTT sense line is installed)
@@ -2369,6 +2383,30 @@ void PassBandTuning() {
 }
 
 /**
+   If enabled DEBUG_SERIAL we send some informations about the current state (vfo, bfo..)
+   with Serial.print to your PC. And a USB cable and use the serial monitor of the
+   Arduino IDE for example.
+*/
+
+void DebugToSerial() {
+
+  Serial.print("RUNmode: "); Serial.print(RUNmode); Serial.print (" ");
+  Serial.print("frequency: "); Serial.print(frequency); Serial.print (" ");
+  Serial.print("RIT: "); Serial.print(RIT); Serial.print (" ");
+  Serial.print("RXshift: "); Serial.print(RXshift); Serial.print (" ");
+  Serial.print("u.vfo_high: "); Serial.print(u.vfo_high); Serial.print (" ");
+  Serial.print("vfoA: "); Serial.print(vfoA); Serial.print(" ");
+  Serial.print("u.vfoA: "); Serial.print(u.vfoA); Serial.print(" ");
+  Serial.print("vfoB: "); Serial.print(vfoB); Serial.print(" ");
+  Serial.print("u.vfoB: "); Serial.print(u.vfoB); Serial.print(" ");
+  Serial.print("bfo_freq: "); Serial.print(bfo_freq); Serial.print(" ");
+  Serial.print("u.bfo_freq: "); Serial.print(u.bfo_freq); Serial.print(" ");
+  //Serial.print(": "); Serial.print(); Serial.print (" ");
+  Serial.println();
+
+}
+
+/**
    setup is called on boot up
    It setups up the modes for various pins as inputs or outputs
    initiliaizes the Si5351 and sets various variables to initial state
@@ -2383,8 +2421,13 @@ void setup() {
 
   lcd.begin(16, 2);
 
-  // Start serial and initialize the Si5351
-  // Serial.begin(9600);
+  // Start serial in debug mode
+  if (DEBUG_SERIAL) {
+    Serial.begin(57600);
+    delay(100);
+  }
+
+  // initialize the Si5351
   analogReference(DEFAULT);
 
   //configure the function button to use the internal pull-up
