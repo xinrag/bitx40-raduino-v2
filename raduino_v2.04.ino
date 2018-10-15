@@ -2391,6 +2391,7 @@ void PassBandTuning() {
 void DebugToSerial() {
 
   Serial.print("RUNmode: "); Serial.print(RUNmode); Serial.print (" ");
+  Serial.print("mode: "); Serial.print(mode); Serial.print (" ");
   Serial.print("frequency: "); Serial.print(frequency); Serial.print (" ");
   Serial.print("RIT: "); Serial.print(RIT); Serial.print (" ");
   Serial.print("RXshift: "); Serial.print(RXshift); Serial.print (" ");
